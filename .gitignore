@@ -13,6 +13,11 @@ TestResults
 *.user
 *.sln.docstates
 
+# intermediate graphical resources
+Tilesets/
+*.pdn
+*.bmp
+
 # Build results
 [Dd]ebug/
 [Rr]elease/
@@ -59,7 +64,7 @@ _ReSharper*
 *.ncrunch*
 .*crunch*.local.xml
 
-# Installshield output folder 
+# Installshield output folder
 [Ee]xpress
 
 # DocProject is a documentation generator add-in
