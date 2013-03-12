@@ -3,7 +3,7 @@ Frogue
 
 Fwarkk's Roguelike
 
-Very simple Roguelike game inspired by BRogue. Mainly used as a teaching/learning exercise.
+Very simple graphical roguelike inspired by BRogue. Mainly used as a teaching/learning exercise.
 
 Done
 ====
@@ -13,3 +13,11 @@ Done
 To Do
 =====
 Everything!
+
+- Limit character to move between tiles; rather than being able to stop between
+- Obstructions
+- Random maze generation (many good resources for this)
+- Monsters
+- Combat
+- Items
+- 
