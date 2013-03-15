@@ -20,16 +20,14 @@ namespace Rougelike
         SpriteBatch spriteBatch;
 
         const Boolean IS_DEBUG = false;
-
-        int View_X = 0, View_Y = 0;
         
-        Map map;
-        Player player;
-
+        Map        map;
+        Player     player;
         SpriteFont font;
 
         int frameRate = 0;
         int frameCounter = 0;
+
         TimeSpan elapsedTime = TimeSpan.Zero;
 
         public Game1()
@@ -46,24 +44,18 @@ namespace Rougelike
         /// </summary>
         protected override void Initialize()
         {
-            if (IS_DEBUG)
-            {
-                graphics.PreferredBackBufferWidth = 640;
-                graphics.PreferredBackBufferHeight = 480;
-                graphics.IsFullScreen = false;
-            }
-            else
-            {
-                graphics.PreferredBackBufferWidth = 1280;
-                graphics.PreferredBackBufferHeight = 720;
-                graphics.IsFullScreen = true;
-            }
-
+            graphics.PreferredBackBufferWidth = 640;
+            graphics.PreferredBackBufferHeight = 480;
+            graphics.IsFullScreen = !IS_DEBUG;            
             graphics.ApplyChanges();
+
             Window.Title = "Fwarkk's Roguelike";
 
             map    = new Map   (graphics.GraphicsDevice);
             player = new Player(graphics.GraphicsDevice, map);
+
+            player.Map_X = 1;
+            player.Map_Y = 1;
 
             base.Initialize();
         }
@@ -101,15 +93,18 @@ namespace Rougelike
         protected override void Update(GameTime gameTime)
         {
             KeyboardState KeyState = Keyboard.GetState(PlayerIndex.One);
-
-            // Allows the game to exit
-            if (KeyState.IsKeyDown(Keys.Escape))
-            {   this.Exit();
-            }
             
-
-            player.Update(gameTime, KeyState);
+            if (KeyState.IsKeyDown(Keys.Escape)) { this.Exit(); }   // Allows the game to exit            
+            if (KeyState.IsKeyDown(Keys.Space )) {map.GenerateMap(); } 
             
+                 if (KeyState.IsKeyDown(Keys.W)) { player.Move(Direction.North); }
+            else if (KeyState.IsKeyDown(Keys.S)) { player.Move(Direction.South); }
+
+                 if (KeyState.IsKeyDown(Keys.A)) { player.Move(Direction.West ); }
+            else if (KeyState.IsKeyDown(Keys.D)) { player.Move(Direction.East ); }
+             
+            player.Update(gameTime);
+
             elapsedTime += gameTime.ElapsedGameTime;
 
             if (elapsedTime > TimeSpan.FromSeconds(1))
@@ -127,8 +122,8 @@ namespace Rougelike
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
-        {            
-            map.Render(player.Loc_X, player.Loc_Y);  
+        {                        
+            map.Render(0,0); //player.Loc_X, player.Loc_Y);  
             player.Render();
 
             frameCounter++;

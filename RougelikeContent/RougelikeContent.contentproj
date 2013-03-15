@@ -42,6 +42,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dwalls_byLunarea-resized.png">
+      <Name>Dwalls_byLunarea-resized</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
     <Compile Include="flagstone.png">
       <Name>flagstone</Name>
       <Importer>TextureImporter</Importer>
@@ -98,6 +103,27 @@
   <ItemGroup>
     <Compile Include="KatieWalk.png">
       <Name>KatieWalk</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Dwalls_byLunarea.png">
+      <Name>Dwalls_byLunarea</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="fwarkk_tiles.png">
+      <Name>fwarkk_tiles</Name>
+      <Importer>TextureImporter</Importer>
+      <Processor>TextureProcessor</Processor>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="DungeonStyle1.png">
+      <Name>DungeonStyle1</Name>
       <Importer>TextureImporter</Importer>
       <Processor>TextureProcessor</Processor>
     </Compile>

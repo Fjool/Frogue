@@ -12,6 +12,8 @@ using Microsoft.Xna.Framework.Media;
 
 namespace Rougelike
 {
+    enum Direction{ South = 0, West, North, East };
+
     class Player
     {
         Texture2D tilemap;
@@ -20,15 +22,19 @@ namespace Rougelike
         Map map;
 
         const Int16 SPRITE_SIZE = 96;
-              
-        public int Loc_X{ get; set; }
-        public int Loc_Y{ get; set; }
+        const Int16 SPRITE_RENDER_SIZE = 32;
+        
+        public int Offset_X{ get; set; }
+        public int Offset_Y{ get; set; }
 
-        enum Direction{ South = 0, West, North, East };
+        public int Map_X { get; set; }
+        public int Map_Y { get; set; }
+
         Direction facing;
+
         Boolean walking = false;
         int Animation_Frame = 0;
-        double Animation_Rate = 100;
+        double Animation_Rate = 50;
         double lastTime;
 
         public Player(GraphicsDevice graphicsIn, Map mapIn)
@@ -36,8 +42,8 @@ namespace Rougelike
             graphics = graphicsIn;
             spriteBatch = new SpriteBatch(graphics);
             map = mapIn;
-            Loc_X = 0;
-            Loc_Y = 0;
+            Offset_X = 0;
+            Offset_Y = 0;
             facing = Direction.North;
         }
 
@@ -48,60 +54,54 @@ namespace Rougelike
 
         public Int16 Speed()
         {
-            return 5;
+            return 2;
         }
 
-        public void ProcessKeys(KeyboardState KeyState)
-        {            
-            walking = false;
-
-            if (KeyState.IsKeyDown(Keys.W))
-            {   Loc_Y -= Speed();
-
-                if (Loc_Y < 0){ Loc_Y = 0; };
-
-                facing = Direction.North;
-                walking = true;
-            }
-            else if (KeyState.IsKeyDown(Keys.S))
-            {   Loc_Y += Speed();
-
-                if (Loc_Y >= map.PixelsHigh()){ Loc_Y = map.PixelsHigh(); };
-
-                facing = Direction.South;
-                walking = true;
-            }
-            
-            if (KeyState.IsKeyDown(Keys.A)) 
-            {   Loc_X -= Speed();
-            
-                if (Loc_X < 0){ Loc_X = 0; };
-
-                facing = Direction.West;
-                walking = true;
-            }
-            else if (KeyState.IsKeyDown(Keys.D))
-            {   Loc_X += Speed();
-
-                if (Loc_X >= map.PixelsWide()){ Loc_X = map.PixelsWide(); };
-
-                facing = Direction.East;
-                walking = true;
-            }
-        }
-
-        public void Update(GameTime gameTime, KeyboardState KeyState)
-        {
-            ProcessKeys(KeyState);
-            
+        public void Move(Direction theDirection)
+        {   
             if (!walking)
-            {
-                Animation_Frame = 0;
-            }
-            else if (gameTime.TotalGameTime.TotalMilliseconds > lastTime + Animation_Rate)
+            {                
+                facing = theDirection;
+                walking = map.maze.DirectionOpen(Map_X, Map_Y, theDirection);               
+            }               
+        }
+
+        public void MovePlayer()
+        {   
+            if (walking)
             {               
-                Animation_Frame++;
-                if (Animation_Frame > 8) { Animation_Frame = 1; };
+                switch(facing)
+                {
+                    case Direction.North: Offset_Y -= Speed(); break;
+                    case Direction.South: Offset_Y += Speed(); break;
+                    case Direction.East : Offset_X += Speed(); break;
+                    case Direction.West : Offset_X -= Speed(); break;
+                    default: break;
+                }                             
+            }
+
+            // walks in full tile increments
+            if (Offset_X < (0-map.TileSize())){ walking = false; Offset_X = 0; Map_X--;};
+            if (Offset_Y < (0-map.TileSize())){ walking = false; Offset_Y = 0; Map_Y--;};
+            if (Offset_X > (  map.TileSize())){ walking = false; Offset_X = 0; Map_X++;};
+            if (Offset_Y > (  map.TileSize())){ walking = false; Offset_Y = 0; Map_Y++;};                            
+        }
+        
+        public void Update(GameTime gameTime)
+        {
+            if (gameTime.TotalGameTime.TotalMilliseconds > lastTime + Animation_Rate)
+            {
+                MovePlayer();
+            
+                if (!walking)
+                {   Animation_Frame = 0;    // causes a stutter between tiles, needs fixing
+                }
+                else
+                {               
+                    Animation_Frame++;
+                    if (Animation_Frame > 8) { Animation_Frame = 1; };                    
+                }
+
                 lastTime = gameTime.TotalGameTime.TotalMilliseconds;
             }
         }
@@ -112,10 +112,10 @@ namespace Rougelike
 
             // render the portion of the buffer that we can see to the screen
             spriteBatch.Draw( tilemap
-                            , new Rectangle( (graphics.Viewport.Width  / 2) - (SPRITE_SIZE/2)
-                                           , (graphics.Viewport.Height / 2) - (SPRITE_SIZE/2) 
-                                           , SPRITE_SIZE
-                                           , SPRITE_SIZE
+                            , new Rectangle( Map_X * map.TileSize() + Offset_X
+                                           , Map_Y * map.TileSize() + Offset_Y
+                                           , SPRITE_RENDER_SIZE
+                                           , SPRITE_RENDER_SIZE
                                            )
                             , new Rectangle( Animation_Frame * SPRITE_SIZE, ((int)facing * 96)+1, SPRITE_SIZE, SPRITE_SIZE)
                             , Color.White

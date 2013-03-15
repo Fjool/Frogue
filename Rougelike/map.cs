@@ -10,23 +10,169 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
 
 namespace Rougelike
-{
+{    
+    static class List
+    {
+        // non-destructive shuffle
+        public static List<T> Shuffle<T>(this IList<T> list, Random rand)  
+        {  
+            var answer = new List<T>();
+
+            for (int n = list.Count - 1; n >= 0; n--)
+            {   answer.Add(list[n]);
+            }
+
+            for (int n = list.Count - 1; n > 0; n--) // Note: Fisher-Yates shuffle
+            {            
+                int k = rand.Next(n + 1);
+                T tmp = answer[k];
+                answer[k] = answer[n];
+                answer[n] = tmp;
+            }
+
+            return answer;
+        }
+    }
+
+    class Cell
+    {
+        public List<Cell> Connections;
+
+        public UInt16    i { get; set; }
+        public UInt16    j { get; set; }        
+        public UInt16 Type { get; set; }
+
+        public static UInt16 CELL_EMPTY = 8;
+        public static UInt16 CELL_WALL  = 4;
+
+        // either East or South can be open
+        Boolean[] Walls = {true, true}; //, true, true};
+
+        public Cell()
+        {     
+            Connections = new List<Cell>();
+            Type = CELL_WALL;
+        }
+
+        // a cell has all walls if its connections are all uncarved
+        public Boolean HasAllWalls()
+        {      
+            return (  (Type == CELL_WALL)
+                   && (Connections.Count(c => c.Type == CELL_WALL) >= 3)
+                   );
+        }
+    }
+        
+    class Maze
+    {   
+        public Cell[,] grid;
+
+        public UInt16 Wide() { return (UInt16)grid.GetLength(0); }
+        public UInt16 High() { return (UInt16)grid.GetLength(1); }
+        public UInt16 PassageLength{ get; set; }
+
+        Random rand = new Random();              
+
+        public Maze(UInt16 Wide, UInt16 High, UInt16 PassageLength_In)
+        {
+            grid = new Cell[Wide, High];        
+            PassageLength = PassageLength_In;
+        }
+        
+        public void CarveCell(Cell cell, UInt16 Steps, Direction theDirection, Cell source)
+        {                  
+            if (cell.HasAllWalls())
+            {
+                Steps++;
+                cell.Type = Cell.CELL_EMPTY;  // empty
+
+                if (Steps < PassageLength)
+                {   
+                    CarveCell(cell.Connections[(int)theDirection], Steps, theDirection, cell);                  
+                }
+                else
+                {   // choose a new direction
+                    var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
+                    
+                    foreach (int  i in Neighbours)
+                    {   if (cell.Connections[i] != source)
+                        {   CarveCell(cell.Connections[i], 0, (Direction)i, cell);                        
+                        }
+                    }    
+                }
+            }
+        }
+
+        public void Generate()
+        {   
+            UInt16 i, j;
+
+            // create a grid of empty cells
+            for (i = 0; i < Wide(); i++)
+            {   for (j = 0; j < High(); j++)
+                {   grid[i,j] = new Cell();
+                    grid[i,j].i = i;
+                    grid[i,j].j = j;
+                }
+            }
+
+            // connect adjacent cells
+            for (i = 0; i < Wide(); i++)
+            {   for (j = 0; j < High(); j++)
+                {   
+                    if (i >          0){ grid[i,j].Connections.Add(grid[i-1, j  ]); }
+                    if (j >          0){ grid[i,j].Connections.Add(grid[  i, j-1]); }
+                    if (i + 1 < Wide()){ grid[i,j].Connections.Add(grid[i+1, j  ]); }
+                    if (j + 1 < High()){ grid[i,j].Connections.Add(grid[  i, j+1]); }
+                }
+            }
+
+            CarveCell( grid[ 1
+                           , 1
+                           ]
+                     , 0
+                     , Direction.East
+                     , null
+                     ); 
+        }
+        
+        public Boolean DirectionOpen(int x, int y, Direction theDirection)
+        {
+            var isValid = false;
+
+            // find the map tile            
+            switch (theDirection)
+            {                    
+                case Direction.North: y--; break;
+                case Direction.South: y++; break;
+                case Direction.East : x++; break;
+                case Direction.West : x--; break;
+            }
+
+            isValid = (x >= 0) && (x < Wide())
+                   && (y >= 0) && (y < High());
+
+            return (isValid && grid[x,y].Type == Cell.CELL_EMPTY);            
+        }       
+    }
+
     class Map
     {        
         Texture2D tilemap;
         RenderTarget2D map_buffer;
 
-        const int TILE_SIZE = 64;
-        const int MAP_WIDE = 100;
-        const int MAP_HIGH = 100;
-        
+        const int TILE_SIZE = 32;
+
+        const int MAP_WIDE = 60;
+        const int MAP_HIGH = 33;
+        const int PASSAGE_LENGTH = 2;
+
         const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
         const int MAP_HIGH_PIXELS = MAP_HIGH * TILE_SIZE;
-
+        
         Random rand1 = new Random();
         
-        // Design a map         
-        int[,] map ;
+        public Maze maze;
 
         GraphicsDevice graphics;
         SpriteBatch spriteBatch;
@@ -41,15 +187,13 @@ namespace Rougelike
             map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TILE_SIZE, graphics.Viewport.Height + TILE_SIZE);
         }
 
-        public int PixelsWide()
-        {
-            return MAP_WIDE_PIXELS - graphics.Viewport.Width;
-        }
-        
-        public int PixelsHigh()
-        {
-            return MAP_HIGH_PIXELS - graphics.Viewport.Height;
-        }
+        public int TileSize(){ return TILE_SIZE; }
+
+        public int PixelsWide() { return MAP_WIDE_PIXELS - graphics.Viewport.Width;  }        
+        public int PixelsHigh() { return MAP_HIGH_PIXELS - graphics.Viewport.Height; }
+
+        public int ScreenTilesWide() { return (graphics.Viewport.Width  / TILE_SIZE); }
+        public int ScreenTilesHigh() { return (graphics.Viewport.Height / TILE_SIZE); }
 
         public Rectangle renderRegion(int View_X, int View_Y)
         {
@@ -62,47 +206,28 @@ namespace Rougelike
        
         public void LoadContent(ContentManager Content)
         {            
-            tilemap = Content.Load<Texture2D>("grundvari tileset");            
+            tilemap = Content.Load<Texture2D>("DungeonStyle1");            
         }
 
         private int CountTilesHigh() { return (tilemap.Height / TILE_SIZE);        }
         private int CountTilesWide() { return (tilemap.Width  / TILE_SIZE);        }
         private int NumTiles(      ) { return CountTilesHigh() * CountTilesWide(); }
-                
+      
         public void GenerateMap()
         {
-            map = new int[MAP_WIDE, MAP_HIGH];
-
-            for (int i = 0; i < MAP_WIDE; i++)
-            {   for (int j = 0; j < MAP_HIGH; j++)
-                { 
-                    // allow the engine to choose from these particular tiles
-                    int[] valid_tiles = {3, 13, 23, 63, 73, 83, 93, 103, 113, 131};
-                    //int[] valid_tiles = {155};
-                    List<int> valid_list = new List<int>(valid_tiles);
-
-                    int chosen_tile = -1;
-
-                    while (!valid_tiles.Contains(chosen_tile))
-                    {                 
-                        chosen_tile = rand1.Next(NumTiles());
-                        
-                    }
-
-                    map[i,j] = chosen_tile;
-                }
-            }              
+            maze = new Maze(MAP_WIDE, MAP_HIGH, PASSAGE_LENGTH);
+            maze.Generate();            
         }
-        
+
         protected Rectangle GetMapTile(int i, int j)
-        {
-            return new Rectangle( ((map[i, j] % CountTilesWide()) * TILE_SIZE)
-                                , ((map[i, j] / CountTilesWide()) * TILE_SIZE)
+        {                   
+            return new Rectangle( ((maze.grid[i, j].Type % CountTilesWide()) * TILE_SIZE)
+                                , ((maze.grid[i, j].Type / CountTilesWide()) * TILE_SIZE)
                                 , TILE_SIZE
                                 , TILE_SIZE
                                 );            
         }
-
+        
         public void Render(int View_X, int View_Y)
         {   
             int BufferTop_X = (View_X / TILE_SIZE);
