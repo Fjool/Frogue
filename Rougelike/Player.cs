@@ -54,7 +54,7 @@ namespace Rougelike
 
         public Int16 Speed()
         {
-            return 2;
+            return 5;
         }
 
         public void Move(Direction theDirection)

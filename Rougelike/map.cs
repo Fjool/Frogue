@@ -44,6 +44,7 @@ namespace Rougelike
 
         public static UInt16 CELL_EMPTY = 8;
         public static UInt16 CELL_WALL  = 4;
+        public static UInt16 CELL_DOOR  = 0;
 
         // either East or South can be open
         Boolean[] Walls = {true, true}; //, true, true};
@@ -71,6 +72,9 @@ namespace Rougelike
         public UInt16 High() { return (UInt16)grid.GetLength(1); }
         public UInt16 PassageLength{ get; set; }
 
+        public UInt16 currentDepth, deepest;
+        public Cell deepestCell;
+
         Random rand = new Random();              
 
         public Maze(UInt16 Wide, UInt16 High, UInt16 PassageLength_In)
@@ -83,24 +87,26 @@ namespace Rougelike
         {                  
             if (cell.HasAllWalls())
             {
+                currentDepth++;   
+
+                if (currentDepth > deepest)
+                {   deepestCell = cell;
+                }
+
                 Steps++;
                 cell.Type = Cell.CELL_EMPTY;  // empty
 
-                if (Steps < PassageLength)
-                {   
-                    CarveCell(cell.Connections[(int)theDirection], Steps, theDirection, cell);                  
-                }
-                else
-                {   // choose a new direction
-                    var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
+                // choose a new direction
+                var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
                     
-                    foreach (int  i in Neighbours)
-                    {   if (cell.Connections[i] != source)
-                        {   CarveCell(cell.Connections[i], 0, (Direction)i, cell);                        
-                        }
-                    }    
-                }
-            }
+                foreach (int  i in Neighbours)
+                {   if (cell.Connections[i] != source)
+                    {   CarveCell(cell.Connections[i], 0, (Direction)i, cell);                        
+                    }
+                }            
+
+                currentDepth--;
+            }                       
         }
 
         public void Generate()
@@ -127,13 +133,20 @@ namespace Rougelike
                 }
             }
 
+            currentDepth = 0;
+            deepest      = 0;
+            deepestCell  = null;
+
             CarveCell( grid[ 1
                            , 1
                            ]
                      , 0
                      , Direction.East
                      , null
-                     ); 
+                     );
+
+            grid[1,1].Type = Cell.CELL_DOOR;
+            deepestCell.Type = Cell.CELL_DOOR;
         }
         
         public Boolean DirectionOpen(int x, int y, Direction theDirection)
@@ -152,7 +165,10 @@ namespace Rougelike
             isValid = (x >= 0) && (x < Wide())
                    && (y >= 0) && (y < High());
 
-            return (isValid && grid[x,y].Type == Cell.CELL_EMPTY);            
+            return (isValid && ( grid[x,y].Type == Cell.CELL_EMPTY
+                              || grid[x,y].Type == Cell.CELL_DOOR
+                               )
+                   );            
         }       
     }
 
@@ -163,8 +179,8 @@ namespace Rougelike
 
         const int TILE_SIZE = 32;
 
-        const int MAP_WIDE = 60;
-        const int MAP_HIGH = 33;
+        const int MAP_WIDE = 20;
+        const int MAP_HIGH = 15;
         const int PASSAGE_LENGTH = 2;
 
         const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
