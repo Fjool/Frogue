@@ -43,7 +43,7 @@ namespace Rougelike
         public UInt16    j { get; set; }        
         public UInt16 Type { get; set; }
 
-        public static UInt16 CELL_EMPTY = 8;
+        public static UInt16 CELL_EMPTY = 5;
         public static UInt16 CELL_WALL  = 4;
         public static UInt16 CELL_DOOR  = 0;
 
@@ -77,6 +77,8 @@ namespace Rougelike
         public UInt16 currentDepth, deepest;
         public Cell deepestCell;
 
+        public int dist;
+
         Random rand = new Random();              
 
         Vector2 dimensions;
@@ -102,14 +104,21 @@ namespace Rougelike
                 Steps++;
                 cell.Type = Cell.CELL_EMPTY; 
 
-                // choose a new direction
-                var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
+                if (Steps < PassageLength)
+                {
+                    CarveCell(cell.Connections[(int)theDirection], Steps, theDirection, cell);                        
+                }
+                else
+                {
+                    // choose a new direction
+                    var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
                     
-                foreach (int  i in Neighbours)
-                {   if (cell.Connections[i] != source)
-                    {   CarveCell(cell.Connections[i], 0, (Direction)i, cell);                        
-                    }
-                }            
+                    foreach (int  i in Neighbours)
+                    {   if (cell.Connections[i] != source)
+                        {   CarveCell(cell.Connections[i], 0, (Direction)i, cell);                        
+                        }
+                    }            
+                }
 
                 currentDepth--;
             }                       
@@ -155,24 +164,24 @@ namespace Rougelike
             deepestCell.Type = Cell.CELL_DOOR;
         }
         
-        public Boolean DirectionOpen(int x, int y, Direction theDirection)
+        public Boolean DirectionOpen(Vector2 loc, Direction theDirection)
         {
             var isValid = false;
 
             // find the map tile            
             switch (theDirection)
             {                    
-                case Direction.North: y--; break;
-                case Direction.South: y++; break;
-                case Direction.East : x++; break;
-                case Direction.West : x--; break;
+                case Direction.North: loc.Y--; break;
+                case Direction.South: loc.Y++; break;
+                case Direction.East : loc.X++; break;
+                case Direction.West : loc.X--; break;
             }
 
-            isValid = (x >= 0) && (x < Wide())
-                   && (y >= 0) && (y < High());
+            isValid = (loc.Y >= 0) && (loc.X < Wide())
+                   && (loc.Y >= 0) && (loc.Y < High());
 
-            return (isValid && ( grid[x,y].Type == Cell.CELL_EMPTY
-                              || grid[x,y].Type == Cell.CELL_DOOR
+            return (isValid && ( grid[(int)loc.X, (int)loc.Y].Type == Cell.CELL_EMPTY
+                              || grid[(int)loc.Y, (int)loc.Y].Type == Cell.CELL_DOOR
                                )
                    );            
         }       
@@ -223,9 +232,6 @@ namespace Rougelike
 
         public int TileSize(){ return TILE_SIZE; }
 
-        public int PixelsWide() { return (int)(dimensions.X * TILE_SIZE) - graphics.Viewport.Width;  }        
-        public int PixelsHigh() { return (int)(dimensions.Y * TILE_SIZE) - graphics.Viewport.Height; }
-
         public int ScreenTilesWide() { return (graphics.Viewport.Width  / TILE_SIZE); }
         public int ScreenTilesHigh() { return (graphics.Viewport.Height / TILE_SIZE); }
         
@@ -255,20 +261,12 @@ namespace Rougelike
                                 , TILE_SIZE
                                 , TILE_SIZE
                                 );            
-        }
-
-        public Rectangle renderRegion()
-        {
-            return new Rectangle ( (int)player.loc.X % TILE_SIZE
-                                 , (int)player.loc.Y % TILE_SIZE
-                                 , graphics.Viewport.Width
-                                 , graphics.Viewport.Height
-                                 );
-        }        
+        }     
        
         public void Render(Vector2 camera)
         {     
             var mapLoc = camera / TILE_SIZE;
+            var renderLoc = Vector2.Zero;
 
             graphics.SetRenderTarget(map_buffer);
             
@@ -280,19 +278,23 @@ namespace Rougelike
                 for (int i = 0; i < (graphics.Viewport.Width / TILE_SIZE) + 1; i++)
                 {   
                     if (  (mapLoc.X + i < dimensions.X)
-                       && (mapLoc.X + j < dimensions.Y)
+                       && (mapLoc.Y + j < dimensions.Y)
                        )
                     {
                         spriteBatch.Draw( tilemap
                                         , new Rectangle(i*TILE_SIZE, j*TILE_SIZE, TILE_SIZE, TILE_SIZE)
                                         , GetMapTile((int)mapLoc.X + i, (int)mapLoc.Y + j)
                                         , Color.White
-                                        );                            
+                                        );    
+
+                        if (player.loc == new Vector2((int)mapLoc.X + i, (int)mapLoc.Y + j))
+                        {   renderLoc = new Vector2(i*TILE_SIZE, j*TILE_SIZE);
+                        }
                     }
                 }
             }
 
-            player.Render(spriteBatch);
+            player.Render(spriteBatch, renderLoc);
 
             spriteBatch.End();
 

@@ -19,18 +19,17 @@ Done
 - Obstructions
 - Random maze generation (many good resources for this)
 - Smooth player movement
+- Reimplement scrolling
+- [FIXED] Player movement craps out when the screen starts scrolling
 
 
 Bugs
 ====
-- Player token stutters at end of movement; moving to stop position unnecessarily
-- Generated maps are scruffy
+- Generated maps are (still a bit) scruffy
 - Doors not facing path
-- Player movement craps out when the screen starts scrolling
 
 To Do
 =====
-- Reimplement scrolling
 - Fog of war
 - Line of sight
 - Click to move

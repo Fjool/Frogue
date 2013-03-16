@@ -1,15 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
-using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
-using NUnit.Framework;
 
 namespace Rougelike
 {
@@ -19,7 +11,7 @@ namespace Rougelike
     {
         Texture2D tilemap;
 
-        const Int16 SPRITE_SIZE = 32;
+        protected const Int16 SPRITE_SIZE = 32;
         
         public Vector2 loc;
 
@@ -47,7 +39,7 @@ namespace Rougelike
 
         public void Move(Direction theDirection)
         {   
-            if (!walking && map.maze.DirectionOpen((int)loc.X, (int)loc.Y, theDirection))
+            if (!walking && map.maze.DirectionOpen(loc, theDirection))
             {
                 walking = true;
                 direction = Vector2.Zero;
@@ -60,7 +52,7 @@ namespace Rougelike
                     case Direction.West : direction.X--; break;
                     default: break;
                 }                      
-
+    
                 if (direction != Vector2.Zero)
                 {   direction.Normalize();
                 }
@@ -69,15 +61,8 @@ namespace Rougelike
             }
         }
  
-        public void Update(GameTime gameTime)
+        protected void UpdateMovement(GameTime gameTime)
         {
-            if (gameTime.TotalGameTime.TotalMilliseconds > lastTime_Animate + Animation_Rate)
-            {                
-                Animation_Frame++;
-                if (Animation_Frame > 7) { Animation_Frame = 0; };                    
-                lastTime_Animate = gameTime.TotalGameTime.TotalMilliseconds;               
-            }
-
             if (walking && gameTime.TotalGameTime.TotalMilliseconds > lastTime_Move + Move_Rate)
             {                
                 distanceTravelled += direction;
@@ -100,6 +85,18 @@ namespace Rougelike
             }
         }
 
+        public void Update(GameTime gameTime)
+        {
+            if (gameTime.TotalGameTime.TotalMilliseconds > lastTime_Animate + Animation_Rate)
+            {                
+                Animation_Frame++;
+                if (Animation_Frame > 7) { Animation_Frame = 0; };                    
+                lastTime_Animate = gameTime.TotalGameTime.TotalMilliseconds;               
+            }
+
+            UpdateMovement(gameTime);    
+        }
+
         public void KeepPlayerOnMaze()
         {            
             // prevent from leaving the maze
@@ -108,10 +105,21 @@ namespace Rougelike
             if (loc.X > map.dimensions.X-1){ loc.X = map.dimensions.X-1; }
             if (loc.Y > map.dimensions.Y-1){ loc.Y = map.dimensions.Y-1; }                   
         }
-
-        public void Render(SpriteBatch spriteBatch)
+        
+        protected Rectangle RenderRectangle()
         {
-            var renderLoc = loc * map.TileSize() + distanceTravelled;
+            var renderLoc = loc * map.TileSize() + distanceTravelled;            
+            
+            return new Rectangle( (int)renderLoc.X
+                                , (int)renderLoc.Y
+                                , SPRITE_SIZE
+                                , SPRITE_SIZE
+                                );
+        }
+        
+        public void Render(SpriteBatch spriteBatch, Vector2 renderLoc)
+        {
+            renderLoc = renderLoc + distanceTravelled;            
             
             spriteBatch.Draw( tilemap
                             , new Rectangle( (int)renderLoc.X
@@ -122,41 +130,6 @@ namespace Rougelike
                             , new Rectangle( Animation_Frame * SPRITE_SIZE, 0, SPRITE_SIZE, SPRITE_SIZE)
                             , Color.White
                             ); 
-        }
-    }
-
-    //--------------------------------------------------------------------------
-    [TestFixture]
-    public class TestPlayer: Player
-    { 
-        Map map;
-
-        [SetUp] 
-        public void Init()
-        {           
-            map = new Map(null, this, new Vector2(2,2));           
-        }
-
-        [Test]
-        public void PlayerStartsAtOne()
-        {   Assert.AreEqual(Vector2.One, loc);   
-        }
-
-        [Test]
-        public void Does_KeepPlayerOnMaze_Work()
-        {   
-            // position player before the start of the map
-            loc.X = -1;
-            loc.Y = -1;
-            KeepPlayerOnMaze();
-
-            Assert.AreEqual(Vector2.Zero, loc);
-
-            // position player after end of map
-            loc = map.dimensions;
-            KeepPlayerOnMaze();
-
-            Assert.AreEqual(Vector2.One, loc);
         }
     }
 }

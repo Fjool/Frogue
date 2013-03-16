@@ -16,16 +16,17 @@ namespace Rougelike
     /// </summary>
     public class Game1 : Microsoft.Xna.Framework.Game
     {
-        GraphicsDeviceManager graphics;
+        protected GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        const Boolean IS_DEBUG = true;
+        const Boolean IS_DEBUG = false;
         
-        Map        map;
-        Player     player;
         SpriteFont font;
-        Vector2    camera = Vector2.Zero;
 
+        protected Vector2 camera = Vector2.Zero;
+        protected Map     map;
+        protected Player  player;
+        
         int frameRate = 0;
         int frameCounter = 0;
 
@@ -37,6 +38,9 @@ namespace Rougelike
             Content.RootDirectory = "Content";
         }
 
+        protected int ScreenWide{ get; set; }
+        protected int ScreenHigh{ get; set; }
+
         /// <summary>
         /// Allows the game to perform any initialization it needs to before starting to run.
         /// This is where it can query for any required services and load any non-graphic
@@ -45,19 +49,27 @@ namespace Rougelike
         /// </summary>
         protected override void Initialize()
         {
-            graphics.PreferredBackBufferWidth = 640;
-            graphics.PreferredBackBufferHeight = 480;
+            ScreenWide = 640;
+            ScreenHigh = 480;
+
+            graphics.PreferredBackBufferWidth = ScreenWide;
+            graphics.PreferredBackBufferHeight = ScreenHigh;
             graphics.IsFullScreen = !IS_DEBUG;            
             graphics.ApplyChanges();
 
             Window.Title = "Fwarkk's Roguelike";
+            
+            CreateEntities();
 
+            base.Initialize();
+        }
+
+        protected void CreateEntities()
+        {            
             player = new Player();
             map    = new Map   (graphics.GraphicsDevice, player, new Vector2(40,40));
 
-            player.loc = Vector2.One;
-
-            base.Initialize();
+            player.loc = new Vector2(1,9);//.One;
         }
 
         /// <summary>
@@ -95,8 +107,8 @@ namespace Rougelike
             KeyboardState KeyState = Keyboard.GetState(PlayerIndex.One);
 
             if (KeyState.IsKeyDown(Keys.Escape)) { this.Exit();       }   // Allows the game to exit            
-            if (KeyState.IsKeyDown(Keys.Space )) { map.GenerateMap(); } 
-            
+            if (KeyState.IsKeyDown(Keys.Space )) { map.GenerateMap(); }             
+
             if (KeyState.IsKeyDown(Keys.W)) { player.Move(Direction.North); }
             if (KeyState.IsKeyDown(Keys.S)) { player.Move(Direction.South); }
             if (KeyState.IsKeyDown(Keys.A)) { player.Move(Direction.West ); }
@@ -120,13 +132,16 @@ namespace Rougelike
         {            
             camera = (player.loc * map.TileSize() + player.distanceTravelled);
 
-            camera.X -= graphics.GraphicsDevice.Viewport.Width  / 2;
-            camera.Y -= graphics.GraphicsDevice.Viewport.Height / 2;
+            camera.X -= ScreenWide / 2;
+            camera.Y -= ScreenHigh / 2;
 
-            if (camera.X <                0) { camera.X = 0;                }
-            if (camera.Y <                0) { camera.Y = 0;                }
-            if (camera.X > map.PixelsWide()) { camera.X = map.PixelsWide(); }
-            if (camera.Y > map.PixelsHigh()) { camera.Y = map.PixelsHigh(); }
+            int PixelsWide = (int)(map.dimensions.X * map.TileSize()) - ScreenWide;
+            int PixelsHigh = (int)(map.dimensions.Y * map.TileSize()) - ScreenHigh;
+
+            if (camera.X <          0) { camera.X = 0;          }
+            if (camera.Y <          0) { camera.Y = 0;          }
+            if (camera.X > PixelsWide) { camera.X = PixelsWide; }
+            if (camera.Y > PixelsHigh) { camera.Y = PixelsHigh; }
         }
 
         /// <summary>
@@ -147,6 +162,19 @@ namespace Rougelike
                 spriteBatch.Begin();
                 spriteBatch.DrawString(font, FrameString, new Vector2(30, 30), Color.Black);
                 spriteBatch.DrawString(font, FrameString, new Vector2(29, 29), Color.Red  );
+                
+                String PlayerString = string.Format("Player: {0}", player.loc);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(30, 60), Color.Black);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(29, 59), Color.Red  );
+                
+                PlayerString = string.Format("Camera: {0}", camera);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(30, 90), Color.Black);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(29, 89), Color.Red  );
+                
+                PlayerString = string.Format("Player loc in pixels: {0}", player.loc * map.TileSize() + player.distanceTravelled);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(30, 120), Color.Black);
+                spriteBatch.DrawString(font, PlayerString, new Vector2(29, 119), Color.Red  );
+                
                 spriteBatch.End();
             }
 

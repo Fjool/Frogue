@@ -1,0 +1,9 @@
+﻿<NUnitProject>
+  <Settings activeconfig="Debug|x86" />
+  <Config name="Debug|x86" binpathtype="Auto">
+    <assembly path="bin\x86\Debug\Rougelike.exe" />
+  </Config>
+  <Config name="Release|x86" binpathtype="Auto">
+    <assembly path="bin\x86\Release\Rougelike.exe" />
+  </Config>
+</NUnitProject>
