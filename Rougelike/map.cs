@@ -42,6 +42,13 @@ namespace Rougelike
         public UInt16    i { get; set; }
         public UInt16    j { get; set; }        
         public UInt16 Type { get; set; }
+        
+        public Vector2 loc 
+        {   get
+            {   return new Vector2(i, j);
+            }
+        }
+
 
         public static UInt16 CELL_EMPTY = 5;
         public static UInt16 CELL_WALL  = 4;
@@ -86,7 +93,6 @@ namespace Rougelike
         public Maze(Vector2 dimensions_In, UInt16 PassageLength_In)
         {
             dimensions = dimensions_In;
-
             grid = new Cell[(int)dimensions.X, (int)dimensions.Y];        
             PassageLength = PassageLength_In;
         }
@@ -99,6 +105,7 @@ namespace Rougelike
 
                 if (currentDepth > deepest)
                 {   deepestCell = cell;
+                    deepest = currentDepth;
                 }
 
                 Steps++;
@@ -152,15 +159,14 @@ namespace Rougelike
             deepest      = 0;
             deepestCell  = null;
 
-            CarveCell( grid[ 1
-                           , 1
-                           ]
+            CarveCell( grid[1, 1]
                      , 0
                      , Direction.East
                      , null
                      );
 
-            grid[1,1].Type = Cell.CELL_DOOR;
+            // indicate the start and finish doors
+              grid[1,1].Type = Cell.CELL_DOOR;
             deepestCell.Type = Cell.CELL_DOOR;
         }
         
@@ -181,7 +187,7 @@ namespace Rougelike
                    && (loc.Y >= 0) && (loc.Y < High());
 
             return (isValid && ( grid[(int)loc.X, (int)loc.Y].Type == Cell.CELL_EMPTY
-                              || grid[(int)loc.Y, (int)loc.Y].Type == Cell.CELL_DOOR
+                              || grid[(int)loc.X, (int)loc.Y].Type == Cell.CELL_DOOR
                                )
                    );            
         }       
@@ -195,12 +201,7 @@ namespace Rougelike
 
         const int TILE_SIZE = 32;
 
-        //const int MAP_WIDE = 100;
-        //const int MAP_HIGH = 100;
         const int PASSAGE_LENGTH = 2;
-
-        //const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
-        //const int MAP_HIGH_PIXELS = MAP_HIGH * TILE_SIZE;
         
         Random rand1 = new Random();
         
@@ -210,6 +211,8 @@ namespace Rougelike
         SpriteBatch spriteBatch;
 
         Player player;
+
+        public Cell exit {get; set;}
 
         public Vector2 dimensions;
 
@@ -251,7 +254,9 @@ namespace Rougelike
         public void GenerateMap()
         {
             maze = new Maze(dimensions, PASSAGE_LENGTH);
-            maze.Generate();            
+            maze.Generate(); 
+            
+            exit = maze.deepestCell;
         }
 
         protected Rectangle GetMapTile(int i, int j)

@@ -19,7 +19,7 @@ namespace Rougelike
         protected GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        const Boolean IS_DEBUG = false;
+        const Boolean IS_DEBUG = true;
         
         SpriteFont font;
 
@@ -67,9 +67,9 @@ namespace Rougelike
         protected void CreateEntities()
         {            
             player = new Player();
-            map    = new Map   (graphics.GraphicsDevice, player, new Vector2(40,40));
+            map    = new Map   (graphics.GraphicsDevice, player, new Vector2(20,20));
 
-            player.loc = new Vector2(1,9);//.One;
+            player.loc = Vector2.One;
         }
 
         /// <summary>
@@ -153,6 +153,16 @@ namespace Rougelike
             positionCameraAbovePlayer();
             map.Render(camera);  
             
+            if (player.loc == map.exit.loc)
+            {
+                String WINN4R = "YOU WINN!!!1";
+
+                spriteBatch.Begin();
+                spriteBatch.DrawString(font, WINN4R, new Vector2((graphics.GraphicsDevice.Viewport.Width/2), (graphics.GraphicsDevice.Viewport.Height/2)), Color.Black);
+                spriteBatch.DrawString(font, WINN4R, new Vector2((graphics.GraphicsDevice.Viewport.Width/2)-1, (graphics.GraphicsDevice.Viewport.Height/2)-1), Color.Red  );
+                spriteBatch.End();
+            }
+
             if (IS_DEBUG)
             {
                 frameCounter++;
