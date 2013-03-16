@@ -53,10 +53,9 @@ namespace Rougelike
             Window.Title = "Fwarkk's Roguelike";
 
             player = new Player();
-            map    = new Map   (graphics.GraphicsDevice, player);
+            map    = new Map   (graphics.GraphicsDevice, player, new Vector2(40,40));
 
-            player.X = 1;
-            player.Y = 1;
+            player.loc = Vector2.One;
 
             base.Initialize();
         }
@@ -119,8 +118,10 @@ namespace Rougelike
 
         protected void positionCameraAbovePlayer()
         {            
-            camera.X = (player.X * map.TileSize()) - (graphics.GraphicsDevice.Viewport.Width / 2);
-            camera.Y = (player.Y * map.TileSize()) - (graphics.GraphicsDevice.Viewport.Height / 2);
+            camera = (player.loc * map.TileSize() + player.distanceTravelled);
+
+            camera.X -= graphics.GraphicsDevice.Viewport.Width  / 2;
+            camera.Y -= graphics.GraphicsDevice.Viewport.Height / 2;
 
             if (camera.X <                0) { camera.X = 0;                }
             if (camera.Y <                0) { camera.Y = 0;                }
@@ -135,7 +136,6 @@ namespace Rougelike
         protected override void Draw(GameTime gameTime)
         {   
             positionCameraAbovePlayer();
-
             map.Render(camera);  
             
             if (IS_DEBUG)

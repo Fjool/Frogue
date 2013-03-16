@@ -35,7 +35,7 @@ namespace Rougelike
     }
 
     //--------------------------------------------------------------------------
-    class Cell
+    public class Cell
     {
         public List<Cell> Connections;
 
@@ -66,7 +66,7 @@ namespace Rougelike
     }
         
     //--------------------------------------------------------------------------    
-    class Maze
+    public class Maze
     {   
         public Cell[,] grid;
 
@@ -79,9 +79,13 @@ namespace Rougelike
 
         Random rand = new Random();              
 
-        public Maze(UInt16 Wide, UInt16 High, UInt16 PassageLength_In)
+        Vector2 dimensions;
+
+        public Maze(Vector2 dimensions_In, UInt16 PassageLength_In)
         {
-            grid = new Cell[Wide, High];        
+            dimensions = dimensions_In;
+
+            grid = new Cell[(int)dimensions.X, (int)dimensions.Y];        
             PassageLength = PassageLength_In;
         }
         
@@ -175,19 +179,19 @@ namespace Rougelike
     }
    
     //--------------------------------------------------------------------------
-    class Map
+    public class Map
     {        
         Texture2D tilemap;
         RenderTarget2D map_buffer;
 
         const int TILE_SIZE = 32;
 
-        const int MAP_WIDE = 100;
-        const int MAP_HIGH = 100;
+        //const int MAP_WIDE = 100;
+        //const int MAP_HIGH = 100;
         const int PASSAGE_LENGTH = 2;
 
-        const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
-        const int MAP_HIGH_PIXELS = MAP_HIGH * TILE_SIZE;
+        //const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
+        //const int MAP_HIGH_PIXELS = MAP_HIGH * TILE_SIZE;
         
         Random rand1 = new Random();
         
@@ -198,23 +202,29 @@ namespace Rougelike
 
         Player player;
 
-        public Map(GraphicsDevice graphicsIn, Player player_In)
-        {            
-            graphics = graphicsIn;
+        public Vector2 dimensions;
 
-            spriteBatch = new SpriteBatch(graphics);
-                         
-            // make a buffer for the map rendering which is a tile wider and higher than the screen's viewport
-            map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TILE_SIZE, graphics.Viewport.Height + TILE_SIZE);
-
+        public Map(GraphicsDevice graphics_In, Player player_In, Vector2 dimensions_In)
+        {   
+            if (graphics_In != null)
+            {
+                graphics = graphics_In;
+                spriteBatch = new SpriteBatch(graphics);
+            
+                // make a buffer for the map rendering which is a tile wider and higher than the screen's viewport
+                map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TILE_SIZE, graphics.Viewport.Height + TILE_SIZE);
+            }
+         
             player = player_In;
             player.map = this;
+
+            dimensions = dimensions_In;
         }
 
         public int TileSize(){ return TILE_SIZE; }
 
-        public int PixelsWide() { return MAP_WIDE_PIXELS - graphics.Viewport.Width;  }        
-        public int PixelsHigh() { return MAP_HIGH_PIXELS - graphics.Viewport.Height; }
+        public int PixelsWide() { return (int)(dimensions.X * TILE_SIZE) - graphics.Viewport.Width;  }        
+        public int PixelsHigh() { return (int)(dimensions.Y * TILE_SIZE) - graphics.Viewport.Height; }
 
         public int ScreenTilesWide() { return (graphics.Viewport.Width  / TILE_SIZE); }
         public int ScreenTilesHigh() { return (graphics.Viewport.Height / TILE_SIZE); }
@@ -231,13 +241,10 @@ namespace Rougelike
         private int CountTilesHigh() { return (tilemap.Height / TILE_SIZE);        }
         private int CountTilesWide() { return (tilemap.Width  / TILE_SIZE);        }
         private int NumTiles(      ) { return CountTilesHigh() * CountTilesWide(); }
-      
-        public int TilesWide(){ return MAP_WIDE; }
-        public int TilesHigh(){ return MAP_HIGH; }
 
         public void GenerateMap()
         {
-            maze = new Maze(MAP_WIDE, MAP_HIGH, PASSAGE_LENGTH);
+            maze = new Maze(dimensions, PASSAGE_LENGTH);
             maze.Generate();            
         }
 
@@ -252,8 +259,8 @@ namespace Rougelike
 
         public Rectangle renderRegion()
         {
-            return new Rectangle ( player.X % TILE_SIZE
-                                 , player.Y % TILE_SIZE
+            return new Rectangle ( (int)player.loc.X % TILE_SIZE
+                                 , (int)player.loc.Y % TILE_SIZE
                                  , graphics.Viewport.Width
                                  , graphics.Viewport.Height
                                  );
@@ -261,10 +268,7 @@ namespace Rougelike
        
         public void Render(Vector2 camera)
         {     
-            int mapX, mapY;
-
-            mapX = (int)(camera.X / (float)TILE_SIZE);
-            mapY = (int)(camera.Y / (float)TILE_SIZE);
+            var mapLoc = camera / TILE_SIZE;
 
             graphics.SetRenderTarget(map_buffer);
             
@@ -275,25 +279,20 @@ namespace Rougelike
             {
                 for (int i = 0; i < (graphics.Viewport.Width / TILE_SIZE) + 1; i++)
                 {   
-                    if (  (mapX + i < MAP_WIDE)
-                       && (mapY + j < MAP_HIGH)
+                    if (  (mapLoc.X + i < dimensions.X)
+                       && (mapLoc.X + j < dimensions.Y)
                        )
                     {
                         spriteBatch.Draw( tilemap
                                         , new Rectangle(i*TILE_SIZE, j*TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                                        , GetMapTile(mapX + i, mapY + j)
+                                        , GetMapTile((int)mapLoc.X + i, (int)mapLoc.Y + j)
                                         , Color.White
                                         );                            
-
-                        if ( (player.X == mapX + i)
-                        &&   (player.Y == mapY + j)
-                           )
-                        {
-                            player.Render(spriteBatch, i*TILE_SIZE, j*TILE_SIZE);
-                        }
                     }
                 }
             }
+
+            player.Render(spriteBatch);
 
             spriteBatch.End();
 

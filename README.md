@@ -18,17 +18,18 @@ Done
 - Limit character to move between tiles; rather than being able to stop between
 - Obstructions
 - Random maze generation (many good resources for this)
+- Smooth player movement
+
 
 Bugs
 ====
 - Player token stutters at end of movement; moving to stop position unnecessarily
 - Generated maps are scruffy
 - Doors not facing path
+- Player movement craps out when the screen starts scrolling
 
 To Do
 =====
-
-- Smooth player movement
 - Reimplement scrolling
 - Fog of war
 - Line of sight
