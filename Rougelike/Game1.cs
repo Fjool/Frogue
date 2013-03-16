@@ -19,11 +19,12 @@ namespace Rougelike
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        const Boolean IS_DEBUG = false;
+        const Boolean IS_DEBUG = true;
         
         Map        map;
         Player     player;
         SpriteFont font;
+        Vector2    camera = Vector2.Zero;
 
         int frameRate = 0;
         int frameCounter = 0;
@@ -51,11 +52,11 @@ namespace Rougelike
 
             Window.Title = "Fwarkk's Roguelike";
 
-            map    = new Map   (graphics.GraphicsDevice);
-            player = new Player(graphics.GraphicsDevice, map);
+            player = new Player();
+            map    = new Map   (graphics.GraphicsDevice, player);
 
-            player.Map_X = 1;
-            player.Map_Y = 1;
+            player.X = 1;
+            player.Y = 1;
 
             base.Initialize();
         }
@@ -93,16 +94,15 @@ namespace Rougelike
         protected override void Update(GameTime gameTime)
         {
             KeyboardState KeyState = Keyboard.GetState(PlayerIndex.One);
-            
-            if (KeyState.IsKeyDown(Keys.Escape)) { this.Exit(); }   // Allows the game to exit            
-            if (KeyState.IsKeyDown(Keys.Space )) {map.GenerateMap(); } 
-            
-                 if (KeyState.IsKeyDown(Keys.W)) { player.Move(Direction.North); }
-            else if (KeyState.IsKeyDown(Keys.S)) { player.Move(Direction.South); }
 
-                 if (KeyState.IsKeyDown(Keys.A)) { player.Move(Direction.West ); }
-            else if (KeyState.IsKeyDown(Keys.D)) { player.Move(Direction.East ); }
-             
+            if (KeyState.IsKeyDown(Keys.Escape)) { this.Exit();       }   // Allows the game to exit            
+            if (KeyState.IsKeyDown(Keys.Space )) { map.GenerateMap(); } 
+            
+            if (KeyState.IsKeyDown(Keys.W)) { player.Move(Direction.North); }
+            if (KeyState.IsKeyDown(Keys.S)) { player.Move(Direction.South); }
+            if (KeyState.IsKeyDown(Keys.A)) { player.Move(Direction.West ); }
+            if (KeyState.IsKeyDown(Keys.D)) { player.Move(Direction.East ); }
+            
             player.Update(gameTime);
 
             elapsedTime += gameTime.ElapsedGameTime;
@@ -117,23 +117,38 @@ namespace Rougelike
             base.Update(gameTime);
         }
 
+        protected void positionCameraAbovePlayer()
+        {            
+            camera.X = (player.X * map.TileSize()) - (graphics.GraphicsDevice.Viewport.Width / 2);
+            camera.Y = (player.Y * map.TileSize()) - (graphics.GraphicsDevice.Viewport.Height / 2);
+
+            if (camera.X <                0) { camera.X = 0;                }
+            if (camera.Y <                0) { camera.Y = 0;                }
+            if (camera.X > map.PixelsWide()) { camera.X = map.PixelsWide(); }
+            if (camera.Y > map.PixelsHigh()) { camera.Y = map.PixelsHigh(); }
+        }
+
         /// <summary>
         /// This is called when the game should draw itself.
         /// </summary>
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
-        {                        
-            map.Render(0,0); //player.Loc_X, player.Loc_Y);  
-            player.Render();
+        {   
+            positionCameraAbovePlayer();
 
-            frameCounter++;
+            map.Render(camera);  
+            
+            if (IS_DEBUG)
+            {
+                frameCounter++;
 
-            String FrameString = string.Format("FPS: {0}", frameRate);
+                String FrameString = string.Format("FPS: {0}", frameRate);
 
-            spriteBatch.Begin();
-            spriteBatch.DrawString(font, FrameString, new Vector2(30, 30), Color.Black);
-            spriteBatch.DrawString(font, FrameString, new Vector2(29, 29), Color.Red  );
-            spriteBatch.End();
+                spriteBatch.Begin();
+                spriteBatch.DrawString(font, FrameString, new Vector2(30, 30), Color.Black);
+                spriteBatch.DrawString(font, FrameString, new Vector2(29, 29), Color.Red  );
+                spriteBatch.End();
+            }
 
             base.Draw(gameTime);
         }

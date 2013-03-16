@@ -5,6 +5,12 @@ Fwarkk's Roguelike
 
 Very simple graphical roguelike inspired by BRogue. Mainly used as a teaching/learning exercise.
 
+Classes
+=======
+Game
+Player
+Map
+
 Done
 ====
 - Smooth scrolling tilemap
@@ -15,15 +21,14 @@ Done
 
 Bugs
 ====
-Player token stutters at end of movement; moving to stop position unnecessarily
-Generated maps are scruffy
-Doors not
+- Player token stutters at end of movement; moving to stop position unnecessarily
+- Generated maps are scruffy
+- Doors not facing path
 
 To Do
 =====
 
-- REFACTOR
-- WRITE TESTS
+- Smooth player movement
 - Reimplement scrolling
 - Fog of war
 - Line of sight
@@ -33,3 +38,7 @@ To Do
 - Monsters
 - Combat
 - Items
+
+- REFACTOR
+- WRITE TESTS
+

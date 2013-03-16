@@ -34,6 +34,7 @@ namespace Rougelike
         }
     }
 
+    //--------------------------------------------------------------------------
     class Cell
     {
         public List<Cell> Connections;
@@ -64,6 +65,7 @@ namespace Rougelike
         }
     }
         
+    //--------------------------------------------------------------------------    
     class Maze
     {   
         public Cell[,] grid;
@@ -94,7 +96,7 @@ namespace Rougelike
                 }
 
                 Steps++;
-                cell.Type = Cell.CELL_EMPTY;  // empty
+                cell.Type = Cell.CELL_EMPTY; 
 
                 // choose a new direction
                 var Neighbours = Enumerable.Range(0, 4).ToArray().Shuffle(rand);
@@ -171,7 +173,8 @@ namespace Rougelike
                    );            
         }       
     }
-
+   
+    //--------------------------------------------------------------------------
     class Map
     {        
         Texture2D tilemap;
@@ -179,8 +182,8 @@ namespace Rougelike
 
         const int TILE_SIZE = 32;
 
-        const int MAP_WIDE = 20;
-        const int MAP_HIGH = 15;
+        const int MAP_WIDE = 100;
+        const int MAP_HIGH = 100;
         const int PASSAGE_LENGTH = 2;
 
         const int MAP_WIDE_PIXELS = MAP_WIDE * TILE_SIZE;
@@ -193,7 +196,9 @@ namespace Rougelike
         GraphicsDevice graphics;
         SpriteBatch spriteBatch;
 
-        public Map(GraphicsDevice graphicsIn)
+        Player player;
+
+        public Map(GraphicsDevice graphicsIn, Player player_In)
         {            
             graphics = graphicsIn;
 
@@ -201,6 +206,9 @@ namespace Rougelike
                          
             // make a buffer for the map rendering which is a tile wider and higher than the screen's viewport
             map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TILE_SIZE, graphics.Viewport.Height + TILE_SIZE);
+
+            player = player_In;
+            player.map = this;
         }
 
         public int TileSize(){ return TILE_SIZE; }
@@ -210,12 +218,7 @@ namespace Rougelike
 
         public int ScreenTilesWide() { return (graphics.Viewport.Width  / TILE_SIZE); }
         public int ScreenTilesHigh() { return (graphics.Viewport.Height / TILE_SIZE); }
-
-        public Rectangle renderRegion(int View_X, int View_Y)
-        {
-            return new Rectangle(View_X % TILE_SIZE, View_Y % TILE_SIZE, graphics.Viewport.Width, graphics.Viewport.Height);
-        }
-
+        
         public Texture2D texture()
         {   return map_buffer;
         }
@@ -229,6 +232,9 @@ namespace Rougelike
         private int CountTilesWide() { return (tilemap.Width  / TILE_SIZE);        }
         private int NumTiles(      ) { return CountTilesHigh() * CountTilesWide(); }
       
+        public int TilesWide(){ return MAP_WIDE; }
+        public int TilesHigh(){ return MAP_HIGH; }
+
         public void GenerateMap()
         {
             maze = new Maze(MAP_WIDE, MAP_HIGH, PASSAGE_LENGTH);
@@ -243,12 +249,23 @@ namespace Rougelike
                                 , TILE_SIZE
                                 );            
         }
-        
-        public void Render(int View_X, int View_Y)
-        {   
-            int BufferTop_X = (View_X / TILE_SIZE);
-            int BufferTop_Y = (View_Y / TILE_SIZE);
-            
+
+        public Rectangle renderRegion()
+        {
+            return new Rectangle ( player.X % TILE_SIZE
+                                 , player.Y % TILE_SIZE
+                                 , graphics.Viewport.Width
+                                 , graphics.Viewport.Height
+                                 );
+        }        
+       
+        public void Render(Vector2 camera)
+        {     
+            int mapX, mapY;
+
+            mapX = (int)(camera.X / (float)TILE_SIZE);
+            mapY = (int)(camera.Y / (float)TILE_SIZE);
+
             graphics.SetRenderTarget(map_buffer);
             
             spriteBatch.Begin();
@@ -258,15 +275,22 @@ namespace Rougelike
             {
                 for (int i = 0; i < (graphics.Viewport.Width / TILE_SIZE) + 1; i++)
                 {   
-                    if (  (BufferTop_X + i < MAP_WIDE)
-                       && (BufferTop_Y + j < MAP_HIGH)
+                    if (  (mapX + i < MAP_WIDE)
+                       && (mapY + j < MAP_HIGH)
                        )
                     {
                         spriteBatch.Draw( tilemap
                                         , new Rectangle(i*TILE_SIZE, j*TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                                        , GetMapTile(BufferTop_X + i, BufferTop_Y + j)
+                                        , GetMapTile(mapX + i, mapY + j)
                                         , Color.White
-                                        );    
+                                        );                            
+
+                        if ( (player.X == mapX + i)
+                        &&   (player.Y == mapY + j)
+                           )
+                        {
+                            player.Render(spriteBatch, i*TILE_SIZE, j*TILE_SIZE);
+                        }
                     }
                 }
             }
@@ -281,10 +305,14 @@ namespace Rougelike
             // render the portion of the buffer that we can see to the screen
             spriteBatch.Draw( map_buffer
                             , new Rectangle(0, 0, graphics.Viewport.Width, graphics.Viewport.Height)
-                            , renderRegion(View_X, View_Y)
+                            , new Rectangle( (int)(camera.X % (float)TILE_SIZE)
+                                           , (int)(camera.Y % (float)TILE_SIZE)
+                                           , graphics.Viewport.Width
+                                           , graphics.Viewport.Height
+                                           )
                             , Color.White
-                            ); 
-
+                            );
+ 
             spriteBatch.End();      
         }
     }
