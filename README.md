@@ -30,6 +30,7 @@ Bugs
 ====
 - Generated maps are (still a bit) scruffy
 - Doors not facing path
+- Fog layer doesn't scroll smoothly with the player
 
 To Do
 =====
