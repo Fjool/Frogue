@@ -60,11 +60,16 @@
     <Compile Include="PlayerTest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="LayerTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Rougelike\Rougelike.csproj">
       <Project>{B96EE771-61BE-4C20-921E-44B74C6935B0}</Project>
       <Name>Rougelike</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\TileEngine\TileEngine\TileEngine.csproj">
+      <Project>{8797A230-69FA-4BAD-AFEF-F48B9D525F85}</Project>
+      <Name>TileEngine</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

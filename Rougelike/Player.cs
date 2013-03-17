@@ -74,11 +74,17 @@ namespace Rougelike
  
         protected void UpdateFogMap()
         {
-            map.fogLayer.FadeAllCellsBy(-16, 0, 256);
+            map.fogLayer.FadeAllCellsBy(-8, 0, 256);
 
             int playerX = (int)loc.X;
             int playerY = (int)loc.Y;
             
+            map.fogLayer.DrawRectangle(new Rectangle(playerX-3, playerY-3, 7, 7), 192);
+            map.fogLayer.DrawRectangle(new Rectangle(playerX-2, playerY-2, 5, 5), 128);
+            map.fogLayer.DrawRectangle(new Rectangle(playerX-1, playerY-1, 3, 3),  64);
+            map.fogLayer.DrawRectangle(new Rectangle(playerX  , playerY  , 1, 1),   0);
+
+            /*
             // set the fog map to full bright (0) for  our presence
             map.fogLayer.data[playerX, playerY] = 0;
 
@@ -108,6 +114,7 @@ namespace Rougelike
                 {   map.fogLayer.data[playerX+1, playerY+1] -= 64; 
                 };
             }    
+             */
         }
 
         protected void UpdateMovement(GameTime gameTime)

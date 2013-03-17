@@ -20,7 +20,7 @@ namespace Rougelike
         protected GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        const Boolean IS_DEBUG = false;
+        const Boolean IS_DEBUG = true;
         
         SpriteFont font;
 

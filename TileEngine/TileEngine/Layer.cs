@@ -14,7 +14,7 @@ namespace TileEngine
         Texture2D tilemap;
 
         public int TileSize{ get; set; }
-        Vector2 dimensions;
+        public Vector2 dimensions;
        
         private int CountTilesHigh() { return (tilemap.Height / TileSize); }
         private int CountTilesWide() { return (tilemap.Width  / TileSize); }
@@ -27,6 +27,24 @@ namespace TileEngine
                 }
         }
 
+        public void DrawRectangle(Rectangle rect, int Value)
+        {
+            rect.X      = Math.Max(0, rect.X);
+            rect.Y      = Math.Max(0, rect.Y);
+            
+            for (int i = rect.X; i < rect.X + rect.Width; i++)
+            {                   
+                for (int j = rect.Y; j < rect.Y + rect.Height; j++)
+                {   
+                    if (i < (int)dimensions.X
+                    &&  j < (int)dimensions.Y)
+                    {
+                        data[i, j] = Value;              
+                    }
+                }
+            }
+        }
+
         public void FadeAllCellsBy(int Value, int min, int max)
         {   for (int i=0; i<(int)dimensions.X; i++)
                 for (int j=0; j<(int)dimensions.Y; j++)
@@ -34,7 +52,6 @@ namespace TileEngine
 
                     if (data[i,j] < min) { data[i,j] = min; }
                     if (data[i,j] > max) { data[i,j] = max; }
-
                 }
         }
 
