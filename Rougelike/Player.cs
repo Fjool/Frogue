@@ -77,44 +77,13 @@ namespace Rougelike
             map.fogLayer.FadeAllCellsBy(-8, 0, 256);
 
             int playerX = (int)loc.X;
-            int playerY = (int)loc.Y;
-            
-            map.fogLayer.DrawRectangle(new Rectangle(playerX-3, playerY-3, 7, 7), 192);
-            map.fogLayer.DrawRectangle(new Rectangle(playerX-2, playerY-2, 5, 5), 128);
-            map.fogLayer.DrawRectangle(new Rectangle(playerX-1, playerY-1, 3, 3),  64);
-            map.fogLayer.DrawRectangle(new Rectangle(playerX  , playerY  , 1, 1),   0);
+            int playerY = (int)loc.Y;            
 
-            /*
-            // set the fog map to full bright (0) for  our presence
-            map.fogLayer.data[playerX, playerY] = 0;
-
-            // set to half bright for adjacent cells (4 dirs)
-            if (playerX     > 0               ) { map.fogLayer.data[playerX-1, playerY  ] -= 128; };
-            if (playerY     > 0               ) { map.fogLayer.data[playerX  , playerY-1] -= 128; };
-            if (playerX + 1 < map.dimensions.X) { map.fogLayer.data[playerX+1, playerY  ] -= 128; };
-            if (playerY + 1 < map.dimensions.Y) { map.fogLayer.data[playerX  , playerY+1] -= 128; };
-
-            // set to quarter bright for corner cells
-            if (playerX > 0) 
-            {   if (playerY > 0)
-                {   map.fogLayer.data[playerX-1, playerY-1] -= 64; 
-                }
-                
-                if (playerY + 1 < map.dimensions.X)
-                {   map.fogLayer.data[playerX-1, playerY+1] -= 64; 
-                }
-            }
-                
-            if (playerX + 1 < map.dimensions.X)
-            {   if (playerY > 0)
-                {   map.fogLayer.data[playerX+1, playerY-1] -= 64; 
-                }
-                
-                if (playerY + 1 < map.dimensions.X)
-                {   map.fogLayer.data[playerX+1, playerY+1] -= 64; 
-                };
-            }    
-             */
+            for (int i=0; i<(int)dimensions.X; i++)
+                for (int j=0; j<(int)dimensions.Y; j++)
+                {   
+                    map.fogLayer.data[i,j] = (int)(loc - new Vector2(i,j)).Length() * 50;
+                }            
         }
 
         protected void UpdateMovement(GameTime gameTime)
