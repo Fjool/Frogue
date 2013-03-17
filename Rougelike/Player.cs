@@ -34,7 +34,7 @@ namespace Rougelike
             TileSize = 32;
 
             dimensions = dimensions_In;
-            playerLayer = new Layer(dimensions);  
+            playerLayer = new Layer(dimensions, -1);  
             playerLayer.TileSize = TileSize;
         }
 
@@ -72,6 +72,44 @@ namespace Rougelike
             }
         }
  
+        protected void UpdateFogMap()
+        {
+            map.fogLayer.FadeAllCellsBy(-16, 0, 256);
+
+            int playerX = (int)loc.X;
+            int playerY = (int)loc.Y;
+            
+            // set the fog map to full bright (0) for  our presence
+            map.fogLayer.data[playerX, playerY] = 0;
+
+            // set to half bright for adjacent cells (4 dirs)
+            if (playerX     > 0               ) { map.fogLayer.data[playerX-1, playerY  ] -= 128; };
+            if (playerY     > 0               ) { map.fogLayer.data[playerX  , playerY-1] -= 128; };
+            if (playerX + 1 < map.dimensions.X) { map.fogLayer.data[playerX+1, playerY  ] -= 128; };
+            if (playerY + 1 < map.dimensions.Y) { map.fogLayer.data[playerX  , playerY+1] -= 128; };
+
+            // set to quarter bright for corner cells
+            if (playerX > 0) 
+            {   if (playerY > 0)
+                {   map.fogLayer.data[playerX-1, playerY-1] -= 64; 
+                }
+                
+                if (playerY + 1 < map.dimensions.X)
+                {   map.fogLayer.data[playerX-1, playerY+1] -= 64; 
+                }
+            }
+                
+            if (playerX + 1 < map.dimensions.X)
+            {   if (playerY > 0)
+                {   map.fogLayer.data[playerX+1, playerY-1] -= 64; 
+                }
+                
+                if (playerY + 1 < map.dimensions.X)
+                {   map.fogLayer.data[playerX+1, playerY+1] -= 64; 
+                };
+            }    
+        }
+
         protected void UpdateMovement(GameTime gameTime)
         {
             if (walking && gameTime.TotalGameTime.TotalMilliseconds > lastTime_Move + Move_Rate)
@@ -86,12 +124,14 @@ namespace Rougelike
                     loc += moved;
                     
                     distanceTravelled = Vector2.Zero;
-
+                    
                     walking = false;                   
                 }
 
                 KeepPlayerOnMaze();
-    
+
+                UpdateFogMap();
+ 
                 lastTime_Move = gameTime.TotalGameTime.TotalMilliseconds;               
             }
         }
@@ -105,7 +145,7 @@ namespace Rougelike
                 lastTime_Animate = gameTime.TotalGameTime.TotalMilliseconds;               
             }
 
-            UpdateMovement(gameTime);    
+            UpdateMovement(gameTime);              
         }
 
         public void KeepPlayerOnMaze()
@@ -119,12 +159,7 @@ namespace Rougelike
 
         protected void GenerateLayer()
         {
-            // clear the entire layer
-            for (int j = 0; j < dimensions.Y; j++)
-            {   for (int i = 0; i < dimensions.X; i++)
-                {   playerLayer.data[i,j] = -1;                     
-                }
-            }
+            playerLayer.SetAllCellsTo(-1);
 
             // draw the player's sprite in the appropriate cell, at the appropriate animation phase
             playerLayer.data[(int)loc.X, (int)loc.Y] = Animation_Frame;                                       
@@ -133,7 +168,7 @@ namespace Rougelike
         public void Render(Vector2 map_loc, RenderTarget2D map_buffer, Rectangle Area, SpriteBatch spriteBatch)
         {
             GenerateLayer();
-            playerLayer.Render(map_loc, map_buffer, Area, spriteBatch, distanceTravelled);            
+            playerLayer.Render(map_loc, map_buffer, Area, spriteBatch, distanceTravelled, false);            
         }
     }
 }

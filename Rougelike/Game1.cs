@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
+using TileEngine;
 
 namespace Rougelike
 {
@@ -19,7 +20,7 @@ namespace Rougelike
         protected GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
 
-        const Boolean IS_DEBUG = true;
+        const Boolean IS_DEBUG = false;
         
         SpriteFont font;
 
@@ -71,7 +72,7 @@ namespace Rougelike
             player = new Player(dimensions);
             map    = new Map   (graphics.GraphicsDevice, player, dimensions);
 
-            player.loc = new Vector2(1,1); // Vector2.One;            
+            player.loc = new Vector2(1,1); // Vector2.One;                        
         }
 
         /// <summary>
@@ -154,7 +155,7 @@ namespace Rougelike
         {   
             positionCameraAbovePlayer();
             map.Render(camera);  
-            
+
             if (player.loc == map.exit.loc)
             {
                 String WINN4R = "winnar is u!";

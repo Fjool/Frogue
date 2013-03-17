@@ -213,8 +213,9 @@ namespace Rougelike
 
         public Vector2 dimensions;
 
-        Layer mapLayer; 
-        
+        public Layer mapLayer; 
+        public Layer fogLayer;
+
         public int TileSize{ get; set; }
 
         public Map(GraphicsDevice graphics_In, Player player_In, Vector2 dimensions_In)
@@ -235,8 +236,11 @@ namespace Rougelike
 
             dimensions = dimensions_In;
             
-            mapLayer = new Layer(dimensions);
+            mapLayer = new Layer(dimensions, 0);
             mapLayer.TileSize = TileSize;
+
+            fogLayer = new Layer(dimensions, 255);
+            fogLayer.TileSize = TileSize;
         }
 
         public int ScreenTilesWide() { return (graphics.Viewport.Width  / TileSize); }
@@ -248,7 +252,8 @@ namespace Rougelike
        
         public void LoadContent(ContentManager Content)
         {            
-            mapLayer.LoadTiles(Content, "DungeonStyle1");                 
+            mapLayer.LoadTiles(Content, "DungeonStyle1");   
+            fogLayer.LoadTiles(Content, "Fog"          );  
         }
 
         private int CountTilesHigh() { return (int)dimensions.Y;                   }
@@ -273,15 +278,15 @@ namespace Rougelike
           
         public void Render(Vector2 camera)
         {     
-            var renderLoc = Vector2.Zero;
-
             graphics.SetRenderTarget(map_buffer);
             
-            spriteBatch.Begin();
-            
-                mapLayer.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch, Vector2.Zero);
+            spriteBatch.Begin(); 
+                mapLayer.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch, Vector2.Zero, false);
                   player.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch);
-                
+            spriteBatch.End();
+
+            spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied);
+                fogLayer.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch, Vector2.Zero, true);
             spriteBatch.End();
 
             // reset output to back buffer

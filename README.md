@@ -23,6 +23,7 @@ Done
 - [FIXED] Player movement craps out when the screen starts scrolling
 - Layers
 - Player becomes a layer
+- Fog of war (fog is a new type of layer)
 
 
 Bugs
@@ -37,7 +38,6 @@ To Do
     - Allow loops
     - Rooms
     - Doors
-- Fog of war
 - Line of sight
 - Click to move
 - Rotate doors to face path
