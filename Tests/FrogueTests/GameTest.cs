@@ -18,7 +18,8 @@ namespace FrogueTests
         [SetUp]
         public void Init()
         {
-            CreateEntities();
+            CreateEntities(new Vector2(40,40));
+
             ScreenWide = 640;
             ScreenHigh = 480;
 

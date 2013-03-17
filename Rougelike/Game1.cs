@@ -59,17 +59,19 @@ namespace Rougelike
 
             Window.Title = "Fwarkk's Roguelike";
             
-            CreateEntities();
+            CreateEntities(new Vector2(30,20));
 
             base.Initialize();
         }
 
-        protected void CreateEntities()
+        protected void CreateEntities(Vector2 MapSize)
         {            
-            player = new Player();
-            map    = new Map   (graphics.GraphicsDevice, player, new Vector2(20,20));
+            var dimensions = MapSize;
 
-            player.loc = Vector2.One;
+            player = new Player(dimensions);
+            map    = new Map   (graphics.GraphicsDevice, player, dimensions);
+
+            player.loc = new Vector2(1,1); // Vector2.One;            
         }
 
         /// <summary>
@@ -130,13 +132,13 @@ namespace Rougelike
 
         protected void positionCameraAbovePlayer()
         {            
-            camera = (player.loc * map.TileSize() + player.distanceTravelled);
+            camera = (player.loc * map.TileSize + player.distanceTravelled);
 
             camera.X -= ScreenWide / 2;
             camera.Y -= ScreenHigh / 2;
-
-            int PixelsWide = (int)(map.dimensions.X * map.TileSize()) - ScreenWide;
-            int PixelsHigh = (int)(map.dimensions.Y * map.TileSize()) - ScreenHigh;
+            
+            int PixelsWide = (int)(map.dimensions.X * map.TileSize) - ScreenWide;
+            int PixelsHigh = (int)(map.dimensions.Y * map.TileSize) - ScreenHigh;
 
             if (camera.X <          0) { camera.X = 0;          }
             if (camera.Y <          0) { camera.Y = 0;          }
@@ -155,10 +157,10 @@ namespace Rougelike
             
             if (player.loc == map.exit.loc)
             {
-                String WINN4R = "YOU WINN!!!1";
+                String WINN4R = "winnar is u!";
 
                 spriteBatch.Begin();
-                spriteBatch.DrawString(font, WINN4R, new Vector2((graphics.GraphicsDevice.Viewport.Width/2), (graphics.GraphicsDevice.Viewport.Height/2)), Color.Black);
+                spriteBatch.DrawString(font, WINN4R, new Vector2((graphics.GraphicsDevice.Viewport.Width/2)  , (graphics.GraphicsDevice.Viewport.Height/2))  , Color.Black);
                 spriteBatch.DrawString(font, WINN4R, new Vector2((graphics.GraphicsDevice.Viewport.Width/2)-1, (graphics.GraphicsDevice.Viewport.Height/2)-1), Color.Red  );
                 spriteBatch.End();
             }
@@ -181,7 +183,7 @@ namespace Rougelike
                 spriteBatch.DrawString(font, PlayerString, new Vector2(30, 90), Color.Black);
                 spriteBatch.DrawString(font, PlayerString, new Vector2(29, 89), Color.Red  );
                 
-                PlayerString = string.Format("Player loc in pixels: {0}", player.loc * map.TileSize() + player.distanceTravelled);
+                PlayerString = string.Format("Player loc in pixels: {0}", player.loc * map.TileSize + player.distanceTravelled);
                 spriteBatch.DrawString(font, PlayerString, new Vector2(30, 120), Color.Black);
                 spriteBatch.DrawString(font, PlayerString, new Vector2(29, 119), Color.Red  );
                 

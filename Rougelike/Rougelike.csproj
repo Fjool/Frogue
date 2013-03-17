@@ -122,6 +122,10 @@
       <Name>RougelikeContent</Name>
       <XnaReferenceType>Content</XnaReferenceType>
     </ProjectReference>
+    <ProjectReference Include="..\TileEngine\TileEngine\TileEngine.csproj">
+      <Project>{8797A230-69FA-4BAD-AFEF-F48B9D525F85}</Project>
+      <Name>TileEngine</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.0,Profile=Client">

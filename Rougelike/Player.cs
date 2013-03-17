@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using TileEngine;
 
 namespace Rougelike
 {
@@ -9,10 +10,8 @@ namespace Rougelike
    
     public class Player
     {
-        Texture2D tilemap;
+        Layer playerLayer;
 
-        protected const Int16 SPRITE_SIZE = 32;
-        
         public Vector2 loc;
 
         Boolean walking = false;
@@ -26,15 +25,27 @@ namespace Rougelike
         public Map map{ get; set; }
 
         public Vector2 direction, distanceTravelled;
+        public Vector2 dimensions;
+
+        public int TileSize { get; set; }
+
+        public Player(Vector2 dimensions_In)
+        {
+            TileSize = 32;
+
+            dimensions = dimensions_In;
+            playerLayer = new Layer(dimensions);  
+            playerLayer.TileSize = TileSize;
+        }
 
         public void LoadContent(ContentManager Content)
         {            
-            tilemap = Content.Load<Texture2D>("wobbly_blob");            
+            playerLayer.LoadTiles(Content, "wobbly_blob");
         }
 
         public Int16 Speed()
         {
-            return 5;
+            return 10;
         }
 
         public void Move(Direction theDirection)
@@ -67,9 +78,9 @@ namespace Rougelike
             {                
                 distanceTravelled += direction;
 
-                if (distanceTravelled.Length() >= map.TileSize())
+                if (distanceTravelled.Length() >= map.TileSize)
                 {
-                    var moved = (distanceTravelled / map.TileSize());
+                    var moved = (distanceTravelled / map.TileSize);
                     moved.Normalize();
                     
                     loc += moved;
@@ -105,31 +116,24 @@ namespace Rougelike
             if (loc.X > map.dimensions.X-1){ loc.X = map.dimensions.X-1; }
             if (loc.Y > map.dimensions.Y-1){ loc.Y = map.dimensions.Y-1; }                   
         }
-        
-        protected Rectangle RenderRectangle()
+
+        protected void GenerateLayer()
         {
-            var renderLoc = loc * map.TileSize() + distanceTravelled;            
-            
-            return new Rectangle( (int)renderLoc.X
-                                , (int)renderLoc.Y
-                                , SPRITE_SIZE
-                                , SPRITE_SIZE
-                                );
+            // clear the entire layer
+            for (int j = 0; j < dimensions.Y; j++)
+            {   for (int i = 0; i < dimensions.X; i++)
+                {   playerLayer.data[i,j] = -1;                     
+                }
+            }
+
+            // draw the player's sprite in the appropriate cell, at the appropriate animation phase
+            playerLayer.data[(int)loc.X, (int)loc.Y] = Animation_Frame;                                       
         }
-        
-        public void Render(SpriteBatch spriteBatch, Vector2 renderLoc)
+
+        public void Render(Vector2 map_loc, RenderTarget2D map_buffer, Rectangle Area, SpriteBatch spriteBatch)
         {
-            renderLoc = renderLoc + distanceTravelled;            
-            
-            spriteBatch.Draw( tilemap
-                            , new Rectangle( (int)renderLoc.X
-                                           , (int)renderLoc.Y
-                                           , SPRITE_SIZE
-                                           , SPRITE_SIZE
-                                           )
-                            , new Rectangle( Animation_Frame * SPRITE_SIZE, 0, SPRITE_SIZE, SPRITE_SIZE)
-                            , Color.White
-                            ); 
+            GenerateLayer();
+            playerLayer.Render(map_loc, map_buffer, Area, spriteBatch, distanceTravelled);            
         }
     }
 }

@@ -21,6 +21,8 @@ Done
 - Smooth player movement
 - Reimplement scrolling
 - [FIXED] Player movement craps out when the screen starts scrolling
+- Layers
+- Player becomes a layer
 
 
 Bugs
@@ -30,6 +32,11 @@ Bugs
 
 To Do
 =====
+- Improve maze algorithm
+    - Use full grid (i.e. don't require an edge of uncarved cells)
+    - Allow loops
+    - Rooms
+    - Doors
 - Fog of war
 - Line of sight
 - Click to move

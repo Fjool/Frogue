@@ -8,6 +8,7 @@ using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.GamerServices;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
+using TileEngine;
 
 namespace Rougelike
 {    
@@ -48,7 +49,6 @@ namespace Rougelike
             {   return new Vector2(i, j);
             }
         }
-
 
         public static UInt16 CELL_EMPTY = 5;
         public static UInt16 CELL_WALL  = 4;
@@ -196,10 +196,7 @@ namespace Rougelike
     //--------------------------------------------------------------------------
     public class Map
     {        
-        Texture2D tilemap;
         RenderTarget2D map_buffer;
-
-        const int TILE_SIZE = 32;
 
         const int PASSAGE_LENGTH = 2;
         
@@ -216,27 +213,34 @@ namespace Rougelike
 
         public Vector2 dimensions;
 
+        Layer mapLayer; 
+        
+        public int TileSize{ get; set; }
+
         public Map(GraphicsDevice graphics_In, Player player_In, Vector2 dimensions_In)
-        {   
+        {               
+            TileSize = 32;
+            
             if (graphics_In != null)
             {
                 graphics = graphics_In;
                 spriteBatch = new SpriteBatch(graphics);
             
                 // make a buffer for the map rendering which is a tile wider and higher than the screen's viewport
-                map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TILE_SIZE, graphics.Viewport.Height + TILE_SIZE);
+                map_buffer = new RenderTarget2D(graphics, graphics.Viewport.Width + TileSize, graphics.Viewport.Height + TileSize);
             }
          
             player = player_In;
             player.map = this;
 
             dimensions = dimensions_In;
+            
+            mapLayer = new Layer(dimensions);
+            mapLayer.TileSize = TileSize;
         }
 
-        public int TileSize(){ return TILE_SIZE; }
-
-        public int ScreenTilesWide() { return (graphics.Viewport.Width  / TILE_SIZE); }
-        public int ScreenTilesHigh() { return (graphics.Viewport.Height / TILE_SIZE); }
+        public int ScreenTilesWide() { return (graphics.Viewport.Width  / TileSize); }
+        public int ScreenTilesHigh() { return (graphics.Viewport.Height / TileSize); }
         
         public Texture2D texture()
         {   return map_buffer;
@@ -244,63 +248,40 @@ namespace Rougelike
        
         public void LoadContent(ContentManager Content)
         {            
-            tilemap = Content.Load<Texture2D>("DungeonStyle1");            
+            mapLayer.LoadTiles(Content, "DungeonStyle1");                 
         }
 
-        private int CountTilesHigh() { return (tilemap.Height / TILE_SIZE);        }
-        private int CountTilesWide() { return (tilemap.Width  / TILE_SIZE);        }
+        private int CountTilesHigh() { return (int)dimensions.Y;                   }
+        private int CountTilesWide() { return (int)dimensions.X;                   }
         private int NumTiles(      ) { return CountTilesHigh() * CountTilesWide(); }
 
         public void GenerateMap()
-        {
+        {            
             maze = new Maze(dimensions, PASSAGE_LENGTH);
             maze.Generate(); 
             
             exit = maze.deepestCell;
+           
+            // copy maze to maplayer
+            for(int i = 0; i < dimensions.X; i++)
+            {
+                for(int j = 0; j < dimensions.Y; j++)
+                {   mapLayer.data[i,j] = maze.grid[i,j].Type; 
+                }
+            }
         }
-
-        protected Rectangle GetMapTile(int i, int j)
-        {                   
-            return new Rectangle( ((maze.grid[i, j].Type % CountTilesWide()) * TILE_SIZE)
-                                , ((maze.grid[i, j].Type / CountTilesWide()) * TILE_SIZE)
-                                , TILE_SIZE
-                                , TILE_SIZE
-                                );            
-        }     
-       
+          
         public void Render(Vector2 camera)
         {     
-            var mapLoc = camera / TILE_SIZE;
             var renderLoc = Vector2.Zero;
 
             graphics.SetRenderTarget(map_buffer);
             
             spriteBatch.Begin();
             
-            // draw to map buffer
-            for (int j = 0; j < (graphics.Viewport.Height / TILE_SIZE) + 1; j++)
-            {
-                for (int i = 0; i < (graphics.Viewport.Width / TILE_SIZE) + 1; i++)
-                {   
-                    if (  (mapLoc.X + i < dimensions.X)
-                       && (mapLoc.Y + j < dimensions.Y)
-                       )
-                    {
-                        spriteBatch.Draw( tilemap
-                                        , new Rectangle(i*TILE_SIZE, j*TILE_SIZE, TILE_SIZE, TILE_SIZE)
-                                        , GetMapTile((int)mapLoc.X + i, (int)mapLoc.Y + j)
-                                        , Color.White
-                                        );    
-
-                        if (player.loc == new Vector2((int)mapLoc.X + i, (int)mapLoc.Y + j))
-                        {   renderLoc = new Vector2(i*TILE_SIZE, j*TILE_SIZE);
-                        }
-                    }
-                }
-            }
-
-            player.Render(spriteBatch, renderLoc);
-
+                mapLayer.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch, Vector2.Zero);
+                  player.Render(camera, map_buffer, new Rectangle(0,0, graphics.Viewport.Width, graphics.Viewport.Height), spriteBatch);
+                
             spriteBatch.End();
 
             // reset output to back buffer
@@ -310,9 +291,9 @@ namespace Rougelike
              
             // render the portion of the buffer that we can see to the screen
             spriteBatch.Draw( map_buffer
-                            , new Rectangle(0, 0, graphics.Viewport.Width, graphics.Viewport.Height)
-                            , new Rectangle( (int)(camera.X % (float)TILE_SIZE)
-                                           , (int)(camera.Y % (float)TILE_SIZE)
+                            , new Rectangle( 0, 0, graphics.Viewport.Width, graphics.Viewport.Height)
+                            , new Rectangle( (int)(camera.X % TileSize)
+                                           , (int)(camera.Y % TileSize)
                                            , graphics.Viewport.Width
                                            , graphics.Viewport.Height
                                            )

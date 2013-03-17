@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <VisualState xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ShowCheckBoxes="false">
   <TopNode>[0-1000]H:\GitHub\Frogue\Tests\FrogueTests\FrogueTests.csproj</TopNode>
-  <SelectedNode>[0-1011]FrogueTests.TestGame.IsScreenScrolling</SelectedNode>
+  <SelectedNode>[0-1000]H:\GitHub\Frogue\Tests\FrogueTests\FrogueTests.csproj</SelectedNode>
   <ExcludeCategories>false</ExcludeCategories>
   <Nodes>
     <Node UniqueName="[0-1000]H:\GitHub\Frogue\Tests\FrogueTests\FrogueTests.csproj" Expanded="true" />
-    <Node UniqueName="[0-1012]H:\GitHub\Frogue\Tests\FrogueTests\bin\Debug\FrogueTests.exe" Expanded="true" />
-    <Node UniqueName="[0-1013]FrogueTests" Expanded="true" />
-    <Node UniqueName="[0-1007]FrogueTests.TestGame" Expanded="true" />
-    <Node UniqueName="[0-1001]FrogueTests.TestPlayer" Expanded="true" />
+    <Node UniqueName="[0-1009]H:\GitHub\Frogue\Tests\FrogueTests\bin\Debug\FrogueTests.exe" Expanded="true" />
+    <Node UniqueName="[0-1010]FrogueTests" Expanded="true" />
+    <Node UniqueName="[0-1001]FrogueTests.TestGame" Expanded="true" />
+    <Node UniqueName="[0-1006]FrogueTests.TestPlayer" Expanded="true" />
   </Nodes>
 </VisualState>
